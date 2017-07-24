@@ -24,7 +24,7 @@ fit_move = (obj, move, world) ->
   -- was able to move
   return unless world\collides_with obj
 
-  -- move piecewise
+  -- reset, move piecewise
   obj.pos = start
 
   hit_x, hit_y = false, false
@@ -83,6 +83,9 @@ class Vector
   __add: (other) =>
     Vector @x + other.x, @y + other.y
 
+  __sub: (other) =>
+    Vector @x - other.x, @y - other.y
+
   __mul: (left, right) ->
     if type(left) == "number"
       Vector right.x * left, right.y * left
@@ -96,60 +99,95 @@ class Vector
   __tostring: =>
     "Vec(#{@x}, #{@y})"
 
+class Rect
+  new: (x,y,@w,@h) =>
+    @pos = Vector x,y
 
+  center: =>
+    Vector @pos.x + @w / 2, @pos.y + @h / 2
 
-class Paddle
+  touches: (obj) =>
+    {x: ox, y: oy} = obj.pos
+    return false if ox + obj.w <= @pos.x
+    return false if ox >= @pos.x + @w
+
+    return false if oy + obj.h <= @pos.y
+    return false if oy >= @pos.y + @h
+
+    true
+
+  contains: (obj) =>
+    {x: ox, y: oy} = obj.pos
+    return false if ox < @pos.x
+    return false if oy < @pos.y
+    return false if ox + obj.w > @pos.x + @w
+    return false if oy + obj.h > @pos.y + @h
+    true
+
+class Paddle extends Rect
   w: 10
   h: 4
 
-  pos: Vector 100, 100
-
   update: (world) =>
     fit_move @, Vector\from_input!, world
+    print "touching ball: #{@touches world.ball}"
 
   draw: =>
     rect @pos.x, @pos.y, @w, @h, 3
 
-class Ball
-  pos: Vector 10, 10
+class Ball extends Rect
   vel: Vector 0, 1.5
   w: 4
   h: 4
 
   update: (world) =>
-    fit_move @, @vel, world
+    hitx, hity = fit_move @, @vel, world
+
+    if hitx
+      @vel = Vector -@vel.x, @vel.y
+
+    if hity
+      @vel = Vector @vel.x, -@vel.y
+
+    unless hitx or hity
+      paddle = world.paddle
+      if @touches paddle
+        @vel = (@center! - paddle\center!)\normalized! * 1.5
 
   draw: =>
     hw = @w/2
     hh = @h/2
-    circ @pos.x - hw, @pos.y - hh, hw, 4
+    circ @pos.x + hw, @pos.y + hh, hw, 4
 
-class World
-  x: 0
-  y: 0
+class World extends Rect
   w: SCREEN_W
   h: SCREEN_H
 
-  contains: (obj) =>
-    {x: ox, y: oy} = obj.pos
-    return false if ox < @x
-    return false if oy < @y
-    return false if ox + obj.w > @x + @w
-    return false if oy + obj.h > @y + @h
-    true
-   
+  new: =>
+    super!
+    @paddle = Paddle 100, 100
+    @ball = Ball 10, 10
+    @entities = {@paddle, @ball}
+  
+  update: =>
+    for e in *@entities
+      e\update @
+
+  draw: =>
+    for e in *@entities
+      e\draw!
+
   collides_with: (obj) =>
     not @contains obj
 
-entities = {Paddle!, Ball!}
-     
+local world
+
 export TIC = ->
   cls 0
+  unless world
+    world = World!
 
-  world = World!
 
-  for e in *entities
-    e\update world
+  world\update!
+  world\draw!
 
-  for e in *entities
-    e\draw!
