@@ -125,11 +125,12 @@ class Rect
     true
 
 class Paddle extends Rect
-  w: 10
-  h: 4
+  w: 40
+  h: 5
+  speed: 2
 
   update: (world) =>
-    fit_move @, Vector\from_input!, world
+    fit_move @, Vector\from_input! * @speed, world
     print "touching ball: #{@touches world.ball}"
 
   draw: =>
