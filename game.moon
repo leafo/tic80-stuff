@@ -160,6 +160,28 @@ class Ball extends Rect
     hh = @h/2
     circ @pos.x + hw, @pos.y + hh, hw, 4
 
+class Block extends Rect
+  w: 8
+  h: 4
+
+  update: (world) =>
+
+  draw: =>
+    rect @pos.x, @pos.y, @w, @h, 5
+
+  @generate_blocks: (x,y, w, h) =>
+    out = {}
+    for k=1,h
+      for j=1,w
+        trace x + (@w + 2) * (j - 1), y + (@h + 2) * (k - 1)
+
+        table.insert out, Block {
+          x: x + (@w + 2) * (j - 1)
+          y: y + (@h + 2) * (k - 1)
+        }
+
+    out
+
 class World extends Rect
   w: SCREEN_W
   h: SCREEN_H
@@ -169,6 +191,8 @@ class World extends Rect
     @paddle = Paddle 100, 100
     @ball = Ball 10, 10
     @entities = {@paddle, @ball}
+    for block in *Block\generate_blocks 10, 10, 5, 3
+      table.insert @entities, block
   
   update: =>
     for e in *@entities
