@@ -161,10 +161,16 @@ class Ball extends Rect
     circ @pos.x + hw, @pos.y + hh, hw, 4
 
 class Block extends Rect
-  w: 8
-  h: 4
+  w: 15
+  h: 5
+  @padding: 4
 
   update: (world) =>
+    {:ball} = world
+
+    if ball\touches @
+      world\remove_entity @
+      ball.vel = Vector ball.vel.x, -ball.vel.y
 
   draw: =>
     rect @pos.x, @pos.y, @w, @h, 5
@@ -173,12 +179,10 @@ class Block extends Rect
     out = {}
     for k=1,h
       for j=1,w
-        trace x + (@w + 2) * (j - 1), y + (@h + 2) * (k - 1)
-
-        table.insert out, Block {
-          x: x + (@w + 2) * (j - 1)
-          y: y + (@h + 2) * (k - 1)
-        }
+        table.insert out, Block(
+          x + (@w + @padding) * (j - 1)
+          y + (@h + @padding) * (k - 1)
+        )
 
     out
 
@@ -193,7 +197,10 @@ class World extends Rect
     @entities = {@paddle, @ball}
     for block in *Block\generate_blocks 10, 10, 5, 3
       table.insert @entities, block
-  
+
+  remove_entity: (obj) =>
+    @entities = [e for e in *@entities when e != obj]
+
   update: =>
     for e in *@entities
       e\update @
