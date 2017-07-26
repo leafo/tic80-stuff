@@ -140,8 +140,23 @@ class Ball extends Rect
   vel: Vector 0, 1.5
   w: 4
   h: 4
+  locked: true
+
+  touches: (...) =>
+    return false if @locked
+    super ...
 
   update: (world) =>
+    if btnp 1
+      @locked = false
+
+    if @locked
+      {:paddle} = world
+
+      center = paddle\center!
+      @pos = Vector center.x - @w/2, paddle.pos.y - @h
+      return
+
     hitx, hity = fit_move @, @vel, world
 
     if hitx
