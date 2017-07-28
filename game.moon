@@ -124,6 +124,12 @@ class Rect
     return false if oy + obj.h > @pos.y + @h
     true
 
+  left_of: (other_rect) =>
+    @pos.x + @w < other_rect.pos.x
+
+  right_of: (other_rect) =>
+    @pos.x > other_rect.pos.x + other_rect.w
+
 class Paddle extends Rect
   w: 40
   h: 5
@@ -189,6 +195,7 @@ class Block extends Rect
 
   draw: =>
     rect @pos.x, @pos.y, @w, @h, 5
+
 
   @generate_blocks: (x,y, w, h) =>
     out = {}
